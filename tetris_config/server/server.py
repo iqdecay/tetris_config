@@ -3,7 +3,6 @@ import sys
 import pickle
 import json
 import os
-from types import SimpleNamespace
 
 from twisted.web.server import Site
 from twisted.web.resource import Resource
@@ -11,7 +10,7 @@ from twisted.internet import reactor, endpoints
 
 import constants as CN
 from decoding_encoding import decode, extraction, encode
-from .BeaconDevice import BeaconDevice
+from .BeaconDevice import BeaconDevice, BeaconDeviceJSONEncoder
 from utils import url_encoded_to_json
 
 JSON = b"application/json"
@@ -173,9 +172,10 @@ class CallbackReceiver(Resource):
     def save_device_list(self):
         filename = CN.DEVICE_LIST_FILENAME
         try:
-            with open(filename, "wb") as file:
-                logging.info("Saving device list to memory")
-                pickle.dump(self.device_list, file, pickle.HIGHEST_PROTOCOL)
+            with open(filename, "w") as file:
+                logging.info("Serializing device list to memory")
+                # Use custom JSON serializer
+                json.dump(self.device_list, file, cls=BeaconDeviceJSONEncoder)
         except Exception as e:
             logging.error(e)
 
