@@ -1,6 +1,6 @@
 import React from "react"
 import BeaconItem from "./BeaconItem"
-import Header from "./Header"
+import Navbar from "./Navbar"
 import beaconData from "../beaconData"
 import "../style.css"
 
@@ -34,13 +34,12 @@ class MainPage extends React.Component {
 
 
     render() {
-        // Cool to add styling here
         const beaconsList = this.state.beacons.map(
             item => <BeaconItem key={item.id} beacon={item}
                                 handleChange={this.handleChange}/>);
         return (
             <div>
-                <Header title="Sigfox supervision des balises"/>
+                <Navbar title="Sigfox supervision des balises"/>
                 <div className="centered-box">
                     {beaconsList}
                 </div>

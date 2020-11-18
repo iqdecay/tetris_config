@@ -1,21 +1,21 @@
 import React from 'react';
-import Header from "./Header";
+import Navbar from "./Navbar";
 import TextForm from "./TextForm";
 
 class ConfigPage extends React.Component {
     constructor(props) {
         super();
         this.state = props.location.state
-        console.log(props)
     }
 
     render() {
-        const title = `Config page for beacon "${this.state.beacon.name}"`
+        const title = `Page de configuration pour la balise
+         "${this.state.beacon.name}", id = ${this.state.beacon.id}`
         return (
             <div>
-                <Header title={title}/>
+                <Navbar title={title} isConfigPage={true}/>
                 <div className="centered-box">
-                     {this.props.match.params.beaconID}
+                    {this.props.match.params.beaconID}
                     <TextForm/>
                 </div>
             </div>
