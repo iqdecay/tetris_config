@@ -1,0 +1,30 @@
+version: "3"
+services:
+  callback_receiver:
+    container_name: "callback_receiver"
+    build: ./tetris_config
+    # $HTTP_PORT is user-defined in tetris.env
+    ports:
+      - $HTTP_PORT:$HTTP_PORT
+    volumes:
+      - ./tetris_config:/code
+    environment:
+      - HTTP_PORT=$HTTP_PORT
+    command: python -u -m server.server
+  mongodb_instance:
+    image: mongo
+    # $MONGO_PORT is user-defined in tetris.env
+    ports:
+      - $MONGO_PORT:$MONGO_PORT
+    environment:
+      - MONGO_PORT=$MONGO_PORT
+  react_server:
+    build: ./tetris_react
+    # $REACT_PORT is user-defined in tetris.env
+    ports:
+      - $REACT_PORT:$REACT_PORT
+    volumes:
+      - ./tetris_react:/code
+    environment:
+      - REACT_PORT=$REACT_PORT
+    command: npm
