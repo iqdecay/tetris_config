@@ -8,10 +8,11 @@ services:
       - $HTTP_PORT:$HTTP_PORT
     volumes:
       - ./tetris_config:/code
-    environment:
+
       - HTTP_PORT=$HTTP_PORT
     command: python -u -m server.server
   mongodb_instance:
+    container_name: "mongodb_server"
     image: mongo
     # $MONGO_PORT is user-defined in tetris.env
     ports:
@@ -19,6 +20,7 @@ services:
     environment:
       - MONGO_PORT=$MONGO_PORT
   react_server:
+    container_name: "frontend_server"
     build: ./tetris_react
     # $REACT_PORT is user-defined in tetris.env
     ports:
@@ -27,4 +29,4 @@ services:
       - ./tetris_react:/code
     environment:
       - REACT_PORT=$REACT_PORT
-    command: npm
+    command: npm start
