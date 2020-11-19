@@ -21,10 +21,6 @@ class BeaconItem extends React.Component {
         this.setState(prevState => ({isHovered: !prevState.isHovered}))
     }
 
-    flexBox(int) {
-        return {flexGrow: int}
-    }
-
     render() {
         const hover = this.state.isHovered && "is-hovered"
         const style = {flexGrow: 4}
@@ -41,17 +37,17 @@ class BeaconItem extends React.Component {
                 <div className={"text-box"} style={style}>
                     <h1>{this.props.beacon.name}</h1>
                     <h2>Id : {this.props.beacon.id}</h2>
-                    {this.props.beacon.last_ack_response}
+                    {this.props.beacon.lastAckResponse}
                 </div>
                 <div className={"column-box status"}>
                     <StatusIcon beacon={this.props.beacon}/>
                     <CustomizedDialogs beacon={this.props.beacon}/>
                 </div>
                 <div className={"column-box"}>
-                    {/*<Link style={{textDecoration: "none"}}*/}
-                    {/*      to={to}>*/}
-                    <SettingsIcon style={{fontSize: "48px"}}/>
-                    {/*</Link>*/}
+                    <Link style={{textDecoration: "none"}}
+                          to={to}>
+                        <SettingsIcon style={{fontSize: "48px", fill: "grey"}}/>
+                    </Link>
                 </div>
             </div>
         )

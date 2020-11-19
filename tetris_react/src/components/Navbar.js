@@ -16,19 +16,21 @@ class Navbar extends React.Component {
             float: "right",
         }
         const returnButton =
-            <Link style={{textDecoration: "none"}}
-                  to={to}>
-                <ArrowBackIcon style={buttonStyle}/>
-            </Link>
-        const showButton = this.props.isConfigPage && returnButton
+            <div className="icon-box">
+                <Link style={{textDecoration: "none"}}
+                      to={to}>
+                    <ArrowBackIcon style={buttonStyle}/>
+                </Link>
+            </div>
+        const showReturnButton = this.props.isConfigPage && returnButton
         return (
             <div>
                 <header className="navbar">
-                    <div className="icon-box">
-                        {showButton}
-                    </div>
+                    {showReturnButton}
                     <div className="title-box">
                         {this.props.title}
+                    </div>
+                    <div className="icon-box">
                     </div>
                 </header>
             </div>
