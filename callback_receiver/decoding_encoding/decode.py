@@ -1,4 +1,6 @@
-from .extraction import supervision_decoding_dict
+import json
+
+from .extraction import supervision_decoding_dict, supervision_post_keys_to_json
 from utils import change_endianness, generate_mask
 import constants as CN
 
@@ -72,3 +74,25 @@ def from_hex_to_data(hex_string: str, extractor_dict: dict) -> dict:
             correct_value = actual_bin_value
         data[key] = correct_value
     return data
+
+
+def extract_format_supervision_data(post_json_content):
+    # lowercase the keys to avoid confusion
+    post_json_content = {key.lower(): value for (key, value)
+                         in post_json_content.items()}
+    formatted_json = {}
+    # Normalize key names
+    for (key, value) in post_json_content.items():
+        if key not in ("data", "true_data"):
+            if key in supervision_post_keys_to_json:
+                post_keys_to_json = supervision_post_keys_to_json
+                corresponding_key = post_keys_to_json[key]
+                formatted_json[corresponding_key] = value
+            else:
+                formatted_json[key] = value
+    hex_data = post_json_content["data"]
+    decoded_data = from_hex_to_data(hex_data, supervision_decoding_dict)
+    for (key, value) in decoded_data.items():
+        formatted_json[key] = value
+    json_string = json.dumps(formatted_json, sort_keys=True, indent=2)
+    return json_string
