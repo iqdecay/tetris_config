@@ -77,7 +77,7 @@ def build_extraction_dictionary(data_origin, sizes, data_keys, special_keys, sig
     :param signed_keys: key of signed data
     :param boolean_keys: key of boolean data
     :param value_modifier: value modifiers for special_data
-    :return:
+    :return: the extraction dictionary
     """
     d = dict()
     bit_position = 0
@@ -94,7 +94,7 @@ def build_extraction_dictionary(data_origin, sizes, data_keys, special_keys, sig
             extractor.is_boolean = True
         d[key] = extractor
     # Must be 96 ( 24 hex characters)
-    assert bit_position == sum(sizes)
+    assert bit_position == sum(sizes), AssertionError(f"The bit position is {bit_position}, expected {sum(sizes)}")
     return d
 
 

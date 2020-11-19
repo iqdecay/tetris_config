@@ -91,8 +91,6 @@ def generate_random_config_data() -> dict:
     return data
 
 
-
-
 def encode_signed_integer(num: int, size: int) -> int:
     """
     Encode signed integer *num* in two's complement representation
@@ -131,8 +129,8 @@ def special_value_to_int(value: float, key: str, modifier: float, data_origin: s
         return int_value
     elif data_origin == CN.CONFIG:
         if key in ["delai_repet", "delai_envoi"]:
-            for key, modifier_value in modifier.items() :
-                if value == modifier_value :
+            for key, modifier_value in modifier.items():
+                if value == modifier_value:
                     return key
         elif key == "duree_cycle_feux":
             return value - modifier

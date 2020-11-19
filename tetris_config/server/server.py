@@ -31,6 +31,7 @@ class CallbackReceiver(Resource):
         logging.info(f"Initialized the HTTP server on port {CN.HTTP_PORT}")
         self.device_list = self.load_device_list_from_memory()
 
+    ## TODO : load the device list from the mongodb database
     @staticmethod
     def load_device_list_from_memory():
         filename = CN.DEVICE_LIST_FILENAME
@@ -38,7 +39,7 @@ class CallbackReceiver(Resource):
             try:
                 with open(filename, 'rb') as file:
                     # Protocol version used is automatically detected, no need to specify it
-                    device_list = pickle.load(file)
+                    device_list = json.load(file)
                     return device_list
             except EOFError:
                 logging.warning(f"Empty device list found in {filename} in {os.getcwd()}")
@@ -110,6 +111,7 @@ class CallbackReceiver(Resource):
 
     def render_GET(self, request):
         logging.warning(f"Received GET request with content {request.content.read()}")
+        self.save_device_list()
         return self.render_not_accepted_method(request)
 
     def render_PUT(self, request):
@@ -169,13 +171,14 @@ class CallbackReceiver(Resource):
         else:
             return "", 204
 
+    ## TODO : write the device list to the mongodb database
     def save_device_list(self):
         filename = CN.DEVICE_LIST_FILENAME
         try:
             with open(filename, "w") as file:
                 logging.info("Serializing device list to memory")
                 # Use custom JSON serializer
-                json.dump(self.device_list, file, cls=BeaconDeviceJSONEncoder)
+                json.dump(self.device_list, file, cls=BeaconDeviceJSONEncoder, sort_keys=True, indent=2)
         except Exception as e:
             logging.error(e)
 
