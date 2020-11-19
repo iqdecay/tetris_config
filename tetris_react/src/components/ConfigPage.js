@@ -1,6 +1,6 @@
 import React from 'react';
 import Navbar from "./Navbar";
-import TextForm from "./TextForm";
+import ConfigForm from "./ConfigForm";
 
 class ConfigPage extends React.Component {
     constructor(props) {
@@ -16,7 +16,7 @@ class ConfigPage extends React.Component {
                 <Navbar title={title} isConfigPage={true}/>
                 <div className="centered-box">
                     {this.props.match.params.beaconID}
-                    <TextForm/>
+                    <ConfigForm beacon={this.state.beacon}/>
                 </div>
             </div>
         )

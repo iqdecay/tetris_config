@@ -1,21 +1,20 @@
-div.number-input {
+div.form-input {
     display: table-row;
-    margin: 3px;
     align-items: center;
-    padding: 30px 30px 30px 30px;
+    /*padding: 30px 30px 30px 30px;*/
     width: 70%;
     border: 2px solid #efefef;
     font-weight: 100;
     font-size: 12px;
     color: #333333;
-    margin-bottom: 2px;
-    margin-top: 2px;
+    margin: 2px 3px;
 }
 
-label.number-input {
+label.form-input {
     display: table-cell;
+    max-width: 170px;
 }
 
-input.number-input {
+input.form-input {
     display: table-cell
 }
