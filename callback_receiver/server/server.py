@@ -59,101 +59,89 @@ class CallbackReceiver(Resource):
         request.setResponseCode(405)
         return HEADER + b"<body>Method not accepted for TeTris app</body>"
 
-    @staticmethod
-    def format_config_data():
+    def format_config_data(self, id_device: str):
         # The server wants a configuration message :
-        random_data = encode.generate_random_config_data()
-        hex_data = encode.build_hex_number(random_data, extraction.config_encoding_dict)
+        if self.config_dict[id_device]:
+            config_data = self.config_dict[id_device]
+        else:
+            config_data = encode.generate_random_config_data()
+        hex_data = encode.build_hex_number(config_data,
+                                           extraction.config_encoding_dict)
         return hex_data
 
-    @staticmethod
-    def extract_and_format_supervision_data(post_json_content):
-        # lowercase the keys to avoid confusion
-        post_json_content = {key.lower(): value for (key, value) in post_json_content.items()}
-        formatted_json = {}
-        # Normalize key names
-        for (key, value) in post_json_content.items():
-            if key not in ("data", "true_data"):
-                if key in extraction.supervision_post_keys_to_json:
-                    corresponding_key = extraction.supervision_post_keys_to_json[key]
-                    formatted_json[corresponding_key] = value
-                else:
-                    formatted_json[key] = value
-        hex_data = post_json_content["data"]
-        decoded_data = decode.from_hex_to_data(hex_data, extraction.supervision_decoding_dict)
-        for (key, value) in decoded_data.items():
-            formatted_json[key] = value
-        json_string = json.dumps(formatted_json, sort_keys=True, indent=2)
-        return json_string
-
-    @staticmethod
-    def request_to_json(request):
-        headers = dict(request.requestHeaders.getAllRawHeaders())
-        content_type_header = headers[b'Content-Type'][0]
-        if content_type_header == JSON:
-            logging.info(f"Received POST request with JSON media type")
-            content = request.content.read().decode(CN.UTF8)
-            try:
-                json_content = json.loads(content)
-            except json.decoder.JSONDecodeError:
-                logging.warning("Empty json data")
-                request.setResponseCode(400)
-                return HEADER + b"<body> Empty json data </body>"
-        elif content_type_header == URL_ENCODED:
-            logging.info(f"Received POST request with url-encoded media type")
-            data_encoded = request.args
-            json_content = url_encoded_to_json(data_encoded)
-        else:
-            logging.info(f"Received POST request with unsupported media type")
-            request.setResponseCode(415)
-            return HEADER + b"<body>Unsupported media type</body>"
-        return json_content
-
     def render_GET(self, request):
-        logging.warning(f"Received GET request with content {request.content.read()}")
-        self.save_device_list()
-        return self.render_not_accepted_method(request)
+        logging.warning(f"Received GET request")
+        # TODO : return the data it requested
+        if self.get_from_react:
+            device_dict_json = json.dumps(self.device_dict,
+                                          cls=BeaconDeviceJSONEncoder,
+                                          sort_keys=True, indent=2)
+            print(device_dict_json)
+            return None
+        else:
+            return self.render_not_accepted_method(request)
 
     def render_PUT(self, request):
         logging.warning(f"Received PUT request")
         return self.render_not_accepted_method(request)
 
     def render_POST(self, request):
-        content_as_json = self.request_to_json(request)
+        print("Render post poto")
+        headers = dict(request.requestHeaders.getAllRawHeaders())
+        content_type_header = headers[b'Content-Type'][0]
+        if content_type_header == JSON:
+            logging.info(f"Received POST request with JSON media type")
+            content = request.content.read().decode(CN.UTF8)
+            try:
+                content_as_json = json.loads(content)
+            except json.decoder.JSONDecodeError:
+                logging.warning("Empty json data")
+                request.setResponseCode(400)
+                return "", HEADER + b"<body> Empty json data </body>"
+        else:
+            logging.info(f"Received POST request with unsupported media type")
+            request.setResponseCode(415)
+            return HEADER + b"<body>Unsupported media type</body>"
         # Prepare the response
-        response_string, response_code = self.generate_POST_response(content_as_json)
-        request.setResponseCode(response_code)
-        if response_code == 200:
-            request.responseHeaders.addRawHeader(b"content-type",
-                                                 b"application/json")
-        return response_string.encode(CN.UTF8)
+        resp_string, resp_code = self.generate_POST_response(content_as_json)
+        request.setResponseCode(resp_code)
+        if resp_code == 200:
+            origin = request.requestHeaders[b"origin"]
+        return resp_string.encode(CN.UTF8)
 
     def generate_POST_response(self, json_content):
         # The device is asking for configuration data
+        if self.POST_req_from_react:
+            device_id = json_content[id]
+            # Name was updated
+            if "name" in json_content:
+                self.device_dict[id].name = json_content["name"]
+            return "", 200
         if "ack" in json_content:
             # Get the device id for answering back to it if needed
             id_device = json_content["device"]
-            if id_device not in self.device_list:
+            if id_device not in self.device_dict:
                 logging.info(f"New beacon with id {id_device} detected")
-                self.device_list[id_device] = BeaconDevice(id_device)
-                self.save_device_list()
+                self.device_dict[id_device] = BeaconDevice(id_device)
+                self.save_device_dict()
             if json_content["ack"] == "true":
-                logging.info(f"Received configuration demand from device {id_device}")
+                logging.info(f"Received configuration demand from "
+                             f"device {id_device}")
                 hex_data = self.format_config_data()
                 response = {
                     id_device:
                         {"downlinkData": hex_data}
                 }
                 response = json.dumps(response, sort_keys=True, indent=2)
-                # Will be set to true once we receive acknowledgement from the device
-                self.device_list[id_device].acknowledged = False
-                self.save_device_list()
+                # Set to true once device acknowledgement is received
+                self.device_dict[id_device].acknowledged = False
+                self.save_device_dict()
                 return response, 200
             return "", 204
         # The device is sending supervision data
         elif "data" in json_content:
             try:
-                response = self.extract_and_format_supervison_data(json_content)
+                response = decode.extract_format_supervision_data(json_content)
                 return response, 200
             except Exception as e:
                 logging.warning(e)
@@ -161,26 +149,38 @@ class CallbackReceiver(Resource):
         # The device is acknowledging the configuration data it received
         elif "downlinkAck" in json_content:
             id_device = json_content["device"]
-            logging.info(f"Received configuration acknowledgement from device {id_device}")
-            self.device_list[id_device].last_ack_response = json_content
-            self.device_list[id_device].last_downlink_timestamp = json_content["time"]
-            self.device_list[id_device].last_downlink_status = json_content["infoCode"]
-            self.device_list[id_device].acknowledged = True
-            self.save_device_list()
+            logging.info(f"Received configuration acknowledgement from "
+                         f"device {id_device}")
+            current_device = self.device_dict[id_device]
+            current_device.last_ack_response = json_content
+            current_device.last_downlink_timestamp = json_content["time"]
+            current_device.last_downlink_status = json_content["infoCode"]
+            current_device.acknowledged = json_content["downlinkAck"]
+            self.device_dict[id_device] = current_device
             return "", 204
         else:
             return "", 204
 
-    ## TODO : write the device list to the mongodb database
-    def save_device_list(self):
+    def save_device_dict(self):
         filename = CN.DEVICE_LIST_FILENAME
         try:
             with open(filename, "w") as file:
-                logging.info("Serializing device list to memory")
+                logging.info("Serializing device dict to memory")
                 # Use custom JSON serializer
-                json.dump(self.device_list, file, cls=BeaconDeviceJSONEncoder, sort_keys=True, indent=2)
+                json.dump(self.device_dict, file, cls=BeaconDeviceJSONEncoder,
+                          sort_keys=True, indent=2)
         except Exception as e:
-            logging.error(e)
+            raise e
+
+    def save_config_dict(self):
+        filename = CN.CONFIG_LIST_FILENAME
+        try:
+            with open(filename, "w") as file:
+                logging.info("Serializing config dict to memory")
+                json.dump(self.device_dict, file,
+                          sort_keys=True, indent=2)
+        except Exception as e:
+            raise e
 
 
 root = CallbackReceiver(file_logging=True, console_logging=True)

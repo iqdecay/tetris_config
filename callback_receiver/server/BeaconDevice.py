@@ -18,7 +18,6 @@ class BeaconDevice:
                f"{self.last_downlink_timestamp} downlink_status = {self.last_downlink_status} " \
                f"{self.last_ack_response}"
 
-
 class BeaconDeviceJSONEncoder(json.JSONEncoder):
     def default(self, o: BeaconDevice) -> dict:
         return o.__dict__
