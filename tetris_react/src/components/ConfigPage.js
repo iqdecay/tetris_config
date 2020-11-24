@@ -9,14 +9,17 @@ class ConfigPage extends React.Component {
     }
 
     render() {
+        console.log("Props : ", this.props)
+        // Get the URL parameter
+        const beaconId = this.props.match.params.beaconID
         const title = `Page de configuration pour la balise
-         "${this.state.beacon.name}", id = ${this.state.beacon.id}`
+         "${this.state.beacon.name}", id = ${beaconId}`
         return (
             <div>
                 <Navbar title={title} isConfigPage={true}/>
                 <div className="centered-box">
-                    {this.props.match.params.beaconID}
-                    <ConfigForm beacon={this.state.beacon}/>
+                    {beaconId}
+                    <ConfigForm beacon={this.state.beacon} beaconId={beaconId}/>
                 </div>
             </div>
         )

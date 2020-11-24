@@ -4,10 +4,21 @@ import "./NumberInput.css"
 class NumberInput extends React.Component {
     constructor(props) {
         super();
+        this.state = {
+            inputValue: props.defaultValue
+        }
         this.handleItemChange = this.handleItemChange.bind(this)
     }
 
+    componentDidUpdate(prevProps, pState, ss) {
+        if (this.props.defaultValue !== prevProps.defaultValue) {
+            this.setState({inputValue: this.props.defaultValue})
+        }
+    }
+
     handleItemChange(event) {
+        this.setState({inputValue: event.target.value})
+        // Propagate change up
         this.props.onChange(event)
     }
 
@@ -21,7 +32,7 @@ class NumberInput extends React.Component {
                     className="form-input"
                     name={this.props.name}
                     type="number"
-                    value={this.props.value}
+                    value={this.state.inputValue}
                     max={this.props.max_val}
                     min={this.props.min_val}
                     step={this.props.step}

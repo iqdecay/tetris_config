@@ -1,12 +1,19 @@
 import React from 'react';
+import {withRouter} from 'react-router-dom';
 import NumberInput from "./NumberInput";
 import numberInputParams from "./numberInputParams";
-import Alert from '@material-ui/lab/Alert';
 
 class ConfigForm extends React.Component {
 
     constructor(props) {
         super(props);
+        this.state = {
+            apiCallReturned: false,
+            name: this.props.beacon.name,
+        }
+        for (const item of numberInputParams) {
+            this.state[item[0]] = ""
+        }
         this.handleInputChange = this.handleInputChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
@@ -16,7 +23,7 @@ class ConfigForm extends React.Component {
         const value = target.value
         const name = target.name
         this.setState({
-            [name]: value
+            [name]: value,
         });
     }
 
@@ -53,23 +60,38 @@ class ConfigForm extends React.Component {
 
     handleSubmit(event) {
         // Submit should export the form data ONLY when it is constitutes a correct Sigfox configuration
-        // TODO : form data export to server (POST request to json server)
-        // TODO : load previous configuration (
-        // TODO : go back to main page
-        // TODO :
         event.preventDefault()
         if (!this.handleValidation()) {
             return
         }
-
         const successString = "Nouvelle configuration sauvegardée pour la balise " +
-                                `${this.props.beacon.name} (id ${this.props.beacon.id})`
+            `${this.props.beacon.name} (id ${this.props.beaconId})`
         alert(successString)
+        const url = "/config/" + this.props.beaconId
+        const newConfig = this.state
+        delete newConfig.apiCallReturned
+        newConfig.id = this.props.beaconId
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(newConfig)
+        })
+            .then(response => response.json())
+            .then(data => {
+                    console.log("Data returned by API : ", data)
+                }
+            )
+            .then(
+                this.props.history.push('/')
+            )
+            .catch(err => console.log(err))
     }
 
-    render() {
-        const formStyle = {display: "table"}
-        const formInputs = numberInputParams.map(
+    generateFormInputs() {
+        return numberInputParams.map(
             item => <NumberInput name={item[0]}
                                  key={item[0]}
                                  min_val={item[1]}
@@ -77,22 +99,55 @@ class ConfigForm extends React.Component {
                                  step={item[3]}
                                  unit={item[4]}
                                  label={item[5]}
+                                 defaultValue={this.state[item[0]]}
                                  onChange={this.handleInputChange}
             />)
+    }
+
+    componentDidMount() {
+        // Get the previous configuration for this device
+        const url = "/config/" + this.props.beaconId
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                "Content-Type": "application/json",
+                'Accept': 'application/json',
+                // "Origin": "localhost:4000",
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                    // console.log("Fetch call returned ")
+                    this.setState({apiCallReturned: true})
+                    const oldConfig = data
+                    // Now that API call returned we can set the default values to state
+                    for (var key in oldConfig) {
+                        this.setState({[key]: oldConfig[key]})
+                    }
+                    console.log("State after fetch : ", this.state)
+                }
+            )
+            .catch(err => console.log(err))
+    }
+
+    render() {
+        const formStyle = {display: "table"}
+        const renderFormInputs = this.state.apiCallReturned ?
+            this.generateFormInputs() : <h1>Loading ... </h1>
         return (
             < form onSubmit={this.handleSubmit}>
                 <div style={formStyle}>
                     <div className={"form-input"}>
                         <label className={"form-input"}>
                             Nom de la balise : </label>
-                        <input name={"name"}
+                        <input className={"form-input"}
+                               name={"name"}
                                type="text"
                                defaultValue={this.props.beacon.name}
                                onChange={this.handleInputChange}
-                               className={formInputs}
                         />
                     </div>
-                    {formInputs}
+                    {renderFormInputs}
                 </div>
                 <input type="submit" value="Submit"/>
             </form>
@@ -100,4 +155,4 @@ class ConfigForm extends React.Component {
     }
 }
 
-export default ConfigForm
+export default withRouter(ConfigForm)
