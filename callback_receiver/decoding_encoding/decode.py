@@ -1,8 +1,4 @@
-import json
-
-from .extraction import supervision_decoding_dict, supervision_post_keys_to_json
 from utils import change_endianness, generate_mask
-import constants as CN
 
 
 def decode_signed_integer(num: int, size: int) -> int:
@@ -17,39 +13,28 @@ def decode_signed_integer(num: int, size: int) -> int:
     return num
 
 
-def int_to_special_value(bin_value: int, key: str, modifier, data_origin: str):
+def int_to_special_value(bin_value: int, key: str, modifier):
     """
     :param bin_value: integer value extracted from hex
     :param key: data key
     :param modifier: float, int or dict of int, helps reconstitute accurate data
-    :param data_origin: if it comes from supervision or configuration
     :return: the correct value
     """
-    if data_origin == CN.SUPERVISION:
-        if key == "hygro":
-            value = bin_value * modifier
-        elif key == "temperature":
-            value = bin_value - modifier
-        else:
-            value = round(bin_value * modifier, 5)
-        return value
-    elif data_origin == CN.CONFIG:
-        if key in ["delai_repet", "delai_envoi"]:
-            return modifier[bin_value]
-        elif key == "duree_cycle_feux":
-            return bin_value + modifier
-        elif key in ["seuil_min_ana30v", "seuil_max_ana30v"]:
-            return bin_value * modifier
+    if key in ["delai_repet", "delai_envoi"]:
+        return modifier[bin_value]
+    elif key == "duree_cycle_feux":
+        return bin_value + modifier
+    elif key in ["seuil_min_ana30v", "seuil_max_ana30v"]:
+        return bin_value * modifier
     else:
-        raise TypeError("The data origin is unexpected")
+        raise TypeError("The key is unexpected")
 
 
 def from_hex_to_data(hex_string: str, extractor_dict: dict) -> dict:
     """
     Take a little-endian string, extract its data in a dictionary and return it
     :param extractor_dict:
-    :param hex_string: 24 char hexadecimal string, little-endian, received
-    from sigfox supervision
+    :param hex_string: 24 char hexadecimal string, little-endian
     :return: dictionary containing the decoded data
     """
     big_endian = change_endianness(hex_string)
@@ -57,7 +42,6 @@ def from_hex_to_data(hex_string: str, extractor_dict: dict) -> dict:
     data = {}
     for key, extractor in extractor_dict.items():
         size = extractor.size
-        data_origin = extractor.data_origin
         bin_number_long = hex_number >> extractor.rshift
         mask = generate_mask(extractor.size)
         bin_number = mask & bin_number_long
@@ -66,33 +50,10 @@ def from_hex_to_data(hex_string: str, extractor_dict: dict) -> dict:
         else:
             actual_bin_value = bin_number
         if extractor.is_special:
-            correct_value = int_to_special_value(actual_bin_value, key,
-                                                 extractor.value_modifier, data_origin)
+            correct_value = int_to_special_value(actual_bin_value, key, extractor.value_modifier)
         elif extractor.is_boolean:
             correct_value = (actual_bin_value == 1)
         else:
             correct_value = actual_bin_value
         data[key] = correct_value
     return data
-
-
-def extract_format_supervision_data(post_json_content):
-    # lowercase the keys to avoid confusion
-    post_json_content = {key.lower(): value for (key, value)
-                         in post_json_content.items()}
-    formatted_json = {}
-    # Normalize key names
-    for (key, value) in post_json_content.items():
-        if key not in ("data", "true_data"):
-            if key in supervision_post_keys_to_json:
-                post_keys_to_json = supervision_post_keys_to_json
-                corresponding_key = post_keys_to_json[key]
-                formatted_json[corresponding_key] = value
-            else:
-                formatted_json[key] = value
-    hex_data = post_json_content["data"]
-    decoded_data = from_hex_to_data(hex_data, supervision_decoding_dict)
-    for (key, value) in decoded_data.items():
-        formatted_json[key] = value
-    json_string = json.dumps(formatted_json, sort_keys=True, indent=2)
-    return json_string

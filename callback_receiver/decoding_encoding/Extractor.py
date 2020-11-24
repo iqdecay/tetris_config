@@ -1,6 +1,6 @@
 class Extractor:
     """
-    Holds information to help extract supervision data from an hexadecimal
+    Holds information to help extract data from an hexadecimal
     string
     """
 

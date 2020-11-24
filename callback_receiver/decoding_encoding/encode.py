@@ -19,41 +19,6 @@ def generate_round_float(min_bound: int, max_bound: int,
     return round(rand_float, 5)
 
 
-def generate_random_supervision_data() -> dict:
-    """
-    Return random supervision data based on technical specification
-    """
-    data = {
-        "lat": generate_round_float(-90, 90, 0.0002),
-        "long": generate_round_float(-180, 180, 0.0002),
-        "temperature": generate_round_float(-40, 87, 1),
-        "ana_int": generate_round_float(0, 30, 0.1),
-        "ana_int2": generate_round_float(-100, 100, 0.1),
-        "type_send": choice([0, 1, 2, 3]),
-        "seuil_ana_int": choice([True, False]),
-        "seuil_ana_int2": choice([True, False]),
-        "hygro": generate_round_float(0, 100, 5),
-        "niveau_batt": choice([0, 1, 2]),
-        "config_switch": binary_choice(),
-        "di0": binary_choice(),
-        "di1": binary_choice(),
-        "di2": binary_choice(),
-        "di3": binary_choice(),
-        "di4": binary_choice(),
-        "di5": binary_choice(),
-        "indice_gps": choice([0, 1, 2, 3]),
-        "de_di0": binary_choice(),
-        "de_di1": binary_choice(),
-        "de_di2": binary_choice(),
-        "de_di3": binary_choice(),
-        "de_di4": binary_choice(),
-        "de_di5": binary_choice(),
-        "off_pos": binary_choice(),
-        "config_off_pos": binary_choice(),
-    }
-    return data
-
-
 def generate_random_config_data() -> dict:
     """
     Return random supervision data based on technical specification
@@ -81,7 +46,7 @@ def generate_random_config_data() -> dict:
         'sens_tor4': binary_choice(),
         'sens_tor5': binary_choice(),
         'sens_tor6': binary_choice(),
-        'delai_envoi': choice([10, 20, 30, 60, 120, 240, 360, 720]),
+        'delai_envoi': generate_round_float(0, 7, 1),
         'delai_repet': choice([10, 30]),
         'r_deradage': generate_round_float(0, 31, 1),
         'sommeil': 0,
@@ -109,49 +74,36 @@ def encode_unsigned_integer(num: int, size: int) -> int:
     return num
 
 
-def special_value_to_int(value: float, key: str, modifier: float, data_origin: str) -> int:
+def special_value_to_int(value: float, key: str, modifier: float) -> int:
     """
     Return float *value* as its code integer using *modifier*, and depending on the data origin
-    :param data_origin:
     """
-    if data_origin == CN.SUPERVISION:
-        if key == "hygro":
-            int_value = value // modifier
-        elif key == "temperature":
-            int_value = value + modifier
-        elif key in ["seuil_ana_int", "seuil_ana_int2"]:
-            if value:
-                int_value = 1
-            else:
-                int_value = 0
-        else:
-            int_value = int(round(value / modifier))
-        return int_value
-    elif data_origin == CN.CONFIG:
-        if key in ["delai_repet", "delai_envoi"]:
-            for key, modifier_value in modifier.items():
-                if value == modifier_value:
-                    return key
-        elif key == "duree_cycle_feux":
-            return value - modifier
-        elif key in ["seuil_min_ana30v", "seuil_max_ana30v"]:
-            return int(round(value / modifier))
+    if key == "delai_repet":
+        # Don't use the [] syntax to avoid possible key errors
+        for key, modifier_value in modifier.items():
+            if value == modifier_value:
+                return key
+    elif key == "duree_cycle_feux":
+        return value - modifier
+    elif key in ["seuil_min_ana30v", "seuil_max_ana30v"]:
+        return int(round(value / modifier))
     else:
-        raise TypeError(f"The data origin is unexpected : got {data_origin}")
+        raise TypeError(f"The key is unexpected : got {key}")
 
 
 def build_hex_number(data: dict, extractors_dictionary: dict) -> int:
     """
     Build big endian hexadecimal number representing *data*, convert it
     to little endian and return it
-    :param data: supervision data from Sigfox
+    :param data: supervision or configuration data from Sigfox
+    :return "hexa" int in little endian (actually just an int for python)
     """
     underlying_int = 0
     for key, info in data.items():
         extractor = extractors_dictionary[key]
         data_origin = extractor.data_origin
         if extractor.is_special:
-            value_as_int = special_value_to_int(info, key, extractor.value_modifier, data_origin)
+            value_as_int = special_value_to_int(info, key, extractor.value_modifier)
         else:
             value_as_int = info
         if extractor.is_signed:
@@ -160,7 +112,6 @@ def build_hex_number(data: dict, extractors_dictionary: dict) -> int:
             value_as_num = value_as_int
         data_as_int = value_as_num << extractor.rshift
         underlying_int += data_as_int
-
     big_endian = hex(underlying_int)
     if len(big_endian) % 2 != 0:
         big_endian = big_endian.replace("0x", "0x0")
