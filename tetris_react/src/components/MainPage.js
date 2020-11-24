@@ -29,7 +29,6 @@ class MainPage extends React.Component {
                 }
             )
             .then(data => this.setState({apiCallReturned: true}))
-            .then(data => console.log("Info call state : ", this.state.beacons))
             .catch(err => console.log(err))
     }
 

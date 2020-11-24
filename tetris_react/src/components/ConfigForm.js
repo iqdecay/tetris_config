@@ -80,13 +80,7 @@ class ConfigForm extends React.Component {
             body: JSON.stringify(newConfig)
         })
             .then(response => response.json())
-            .then(data => {
-                    console.log("Data returned by API : ", data)
-                }
-            )
-            .then(
-                this.props.history.push('/')
-            )
+            .then(this.props.history.push('/'))
             .catch(err => console.log(err))
     }
 
@@ -117,14 +111,12 @@ class ConfigForm extends React.Component {
         })
             .then(response => response.json())
             .then(data => {
-                    // console.log("Fetch call returned ")
                     this.setState({apiCallReturned: true})
                     const oldConfig = data
                     // Now that API call returned we can set the default values to state
                     for (var key in oldConfig) {
                         this.setState({[key]: oldConfig[key]})
                     }
-                    console.log("State after fetch : ", this.state)
                 }
             )
             .catch(err => console.log(err))

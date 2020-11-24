@@ -9,7 +9,6 @@ class ConfigPage extends React.Component {
     }
 
     render() {
-        console.log("Props : ", this.props)
         // Get the URL parameter
         const beaconId = this.props.match.params.beaconID
         const title = `Page de configuration pour la balise
