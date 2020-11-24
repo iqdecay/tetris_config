@@ -4,7 +4,7 @@ import ConfigPage from "./components/ConfigPage";
 import {
     BrowserRouter as Router,
     Route,
-    Switch
+    Switch,
 } from "react-router-dom";
 
 class App extends React.Component {
