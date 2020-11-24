@@ -1,25 +1,24 @@
-version: "3"
+version: "1"
 services:
   callback_receiver:
     container_name: "callback_receiver"
-    build: ./tetris_config
+    build: ./callback_receiver
     # $HTTP_PORT is user-defined in tetris.env
     ports:
       - $HTTP_PORT:$HTTP_PORT
     volumes:
-      - ./tetris_config:/code
-
+      - ./callback_receiver:/code
       - HTTP_PORT=$HTTP_PORT
     command: python -u -m server.server
-  mongodb_instance:
-    container_name: "mongodb_server"
-    image: mongo
-    # $MONGO_PORT is user-defined in tetris.env
+  backend:
+    container_name: "backend_server"
+    build: ./backend
+    # $GO_PORT is user-defined in tetris.env
     ports:
-      - $MONGO_PORT:$MONGO_PORT
+      - $GO_PORT:$GO_PORT
     environment:
-      - MONGO_PORT=$MONGO_PORT
-  react_server:
+      - GO_PORT=$GO_PORT
+  frontend:
     container_name: "frontend_server"
     build: ./tetris_react
     # $REACT_PORT is user-defined in tetris.env
