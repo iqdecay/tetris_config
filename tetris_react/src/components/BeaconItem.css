@@ -20,7 +20,8 @@
 }
 
 .text-box {
-    flex-grow: 4;
+    width: 50%;
+    /*text-align: center;*/
 }
 
 .column-box {

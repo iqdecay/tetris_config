@@ -24,9 +24,8 @@ class BeaconItem extends React.Component {
     render() {
         const hover = this.state.isHovered && "is-hovered"
         const style = {flexGrow: 4}
-        const link = "/config/" + this.props.beacon.id
         const to = {
-            pathname: "/config/" + this.props.beacon.id,
+            pathname: "/config/" + this.props.id,
             state: {beacon: this.props.beacon}
         }
 
@@ -36,17 +35,17 @@ class BeaconItem extends React.Component {
                  onMouseLeave={this.toggleHover}>
                 <div className={"text-box"} style={style}>
                     <h1>{this.props.beacon.name}</h1>
-                    <h2>Id : {this.props.beacon.id}</h2>
-                    {this.props.beacon.lastAckResponse}
+                    <h2>Id : {this.props.id}</h2>
+                    {this.props.beacon.downlinkTimestamp}
                 </div>
                 <div className={"column-box status"}>
                     <StatusIcon beacon={this.props.beacon}/>
-                    <CustomizedDialogs beacon={this.props.beacon}/>
+                    <CustomizedDialogs beacon={this.props.beacon} id={this.props.id}/>
                 </div>
                 <div className={"column-box"}>
                     <Link style={{textDecoration: "none"}}
                           to={to}>
-                        <SettingsIcon style={{fontSize: "48px", fill: "grey"}}/>
+                       <SettingsIcon style={{fontSize: "48px", fill: "grey"}}/>
                     </Link>
                 </div>
             </div>
