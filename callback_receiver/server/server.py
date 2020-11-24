@@ -1,25 +1,27 @@
 import logging
 import sys
-import pickle
 import json
-import os
 
 from twisted.web.server import Site
 from twisted.web.resource import Resource
 from twisted.internet import reactor, endpoints
 
 import constants as CN
-from decoding_encoding import decode, extraction, encode
-from .BeaconDevice import BeaconDevice, BeaconDeviceJSONEncoder
-from utils import url_encoded_to_json
+from decoding_encoding import extraction, encode
+from utils import camel_case_to_snake, format_timestamp
+
+from .api_requests import get_request, post_request
 
 JSON = b"application/json"
 URL_ENCODED = b"application/x-www-form-urlencoded"
 HEADER = b"<!DOCTYPE html><html><head><meta charset='utf-8'>"
+SUCCESS_NO_CONTENT = ("", 204)
 
 
 class CallbackReceiver(Resource):
-    def __init__(self, file_logging=True, console_logging=False):
+    def __init__(self, file_logging=True, console_logging=False,
+                 backend_address: str = "localhost",
+                 backend_port: str = "4000"):
         super().__init__()
         logging_handlers = []
         if console_logging:
@@ -27,29 +29,19 @@ class CallbackReceiver(Resource):
         if file_logging:
             logging_handlers.append(logging.FileHandler(CN.LOG_FILENAME))
         logging.basicConfig(level=logging.INFO,
-                            format="%(asctime)s [%(levelname)s] %(message)s", handlers=logging_handlers, )
+                            format="%(asctime)s [%(levelname)s] %(message)s",
+                            handlers=logging_handlers, )
         logging.info(f"Initialized the HTTP server on port {CN.HTTP_PORT}")
-        self.device_list = self.load_device_list_from_memory()
+        self.address = backend_address
+        self.port = backend_port
+        logging.info(f"API calls will be made to {self.address}:{self.port}")
 
-    ## TODO : load the device list from the mongodb database
-    @staticmethod
-    def load_device_list_from_memory():
-        filename = CN.DEVICE_LIST_FILENAME
-        if os.path.exists(filename):
-            try:
-                with open(filename, 'rb') as file:
-                    # Protocol version used is automatically detected, no need to specify it
-                    device_list = json.load(file)
-                    return device_list
-            except EOFError:
-                logging.warning(f"Empty device list found in {filename} in {os.getcwd()}")
-                return dict()
-            except Exception as e:
-                logging.error(e)
-                raise e
-        else:
-            logging.warning(f"No file found for device list, {filename} will be created in {os.getcwd()} if needed")
-            return {}
+    def build_api_url(self, api_endpoint: str) -> str:
+        """
+        Take an endpoint string and build a valid url for an API call out of it
+        """
+        api_endpoint = api_endpoint.strip("/")
+        return f"http://{self.address}:{self.port}/{api_endpoint}/"
 
     @staticmethod
     def render_not_accepted_method(request):
@@ -59,34 +51,54 @@ class CallbackReceiver(Resource):
         request.setResponseCode(405)
         return HEADER + b"<body>Method not accepted for TeTris app</body>"
 
-    def format_config_data(self, id_device: str):
-        # The server wants a configuration message :
-        if self.config_dict[id_device]:
-            config_data = self.config_dict[id_device]
-        else:
-            config_data = encode.generate_random_config_data()
-        hex_data = encode.build_hex_number(config_data,
-                                           extraction.config_encoding_dict)
-        return hex_data
+    @staticmethod
+    def format_config_data(config_json: dict) -> dict:
+        """
+        Take a configuration dictionnary extracted from JSON and turn it into a
+        valid sigfox configuration : switch to snake case, remove the name entry
+        and set trame_reçue to 1
+        :param config_json: the dictionary in camel case
+        :return: the transformed dictionary in snake case
+        """
+        del config_json["name"]
+        config_json["trameReçue"] = 1
+        snake_config = dict()
+        for camel_key, item in config_json.items():
+            snake_key = camel_case_to_snake(camel_key)
+            if snake_key in ("seuil_min_ana30v", "seuil_max_ana30v"):
+                item_with_type = float(item)
+            else:
+                item_with_type = int(item)
+            snake_config[snake_key] = item_with_type
+        return snake_config
+
+    @staticmethod
+    def format_device_data(info_json: dict) -> dict:
+        """
+        Take a dictionary received via an acknowledgement request, transform it
+        so it can be processed by the backend and return it
+        :param info_json: the JSON received from Sigfox
+        :return: dict with the correct content for backend
+        """
+        device_info = dict()
+        # Time is represented as string in backend
+        info_json["time"] = format_timestamp(info_json["time"])
+        # The backend uses camel case
+        device_info["lastAckResponse"] = info_json
+        device_info["downlinkTimestamp"] = info_json["time"]
+        device_info["lastDownlinkStatus"] = info_json["infoCode"]
+        device_info["acknowledged"] = info_json["downlinkAck"]
+        return device_info
 
     def render_GET(self, request):
-        logging.warning(f"Received GET request")
-        # TODO : return the data it requested
-        if self.get_from_react:
-            device_dict_json = json.dumps(self.device_dict,
-                                          cls=BeaconDeviceJSONEncoder,
-                                          sort_keys=True, indent=2)
-            print(device_dict_json)
-            return None
-        else:
-            return self.render_not_accepted_method(request)
+        logging.warning(f"Received unsupported GET request")
+        return self.render_not_accepted_method(request)
 
     def render_PUT(self, request):
-        logging.warning(f"Received PUT request")
+        logging.warning(f"Received unsupported PUT request")
         return self.render_not_accepted_method(request)
 
     def render_POST(self, request):
-        print("Render post poto")
         headers = dict(request.requestHeaders.getAllRawHeaders())
         content_type_header = headers[b'Content-Type'][0]
         if content_type_header == JSON:
@@ -95,9 +107,9 @@ class CallbackReceiver(Resource):
             try:
                 content_as_json = json.loads(content)
             except json.decoder.JSONDecodeError:
-                logging.warning("Empty json data")
+                logging.warning("Wrong json data")
                 request.setResponseCode(400)
-                return "", HEADER + b"<body> Empty json data </body>"
+                return "", HEADER + b"<body> Wrong json data </body>"
         else:
             logging.info(f"Received POST request with unsupported media type")
             request.setResponseCode(415)
@@ -105,85 +117,52 @@ class CallbackReceiver(Resource):
         # Prepare the response
         resp_string, resp_code = self.generate_POST_response(content_as_json)
         request.setResponseCode(resp_code)
-        if resp_code == 200:
-            origin = request.requestHeaders[b"origin"]
         return resp_string.encode(CN.UTF8)
 
     def generate_POST_response(self, json_content):
-        # The device is asking for configuration data
-        if self.POST_req_from_react:
-            device_id = json_content[id]
-            # Name was updated
-            if "name" in json_content:
-                self.device_dict[id].name = json_content["name"]
-            return "", 200
         if "ack" in json_content:
-            # Get the device id for answering back to it if needed
-            id_device = json_content["device"]
-            if id_device not in self.device_dict:
-                logging.info(f"New beacon with id {id_device} detected")
-                self.device_dict[id_device] = BeaconDevice(id_device)
-                self.save_device_dict()
-            if json_content["ack"] == "true":
-                logging.info(f"Received configuration demand from "
-                             f"device {id_device}")
-                hex_data = self.format_config_data()
-                response = {
-                    id_device:
-                        {"downlinkData": hex_data}
-                }
-                response = json.dumps(response, sort_keys=True, indent=2)
-                # Set to true once device acknowledgement is received
-                self.device_dict[id_device].acknowledged = False
-                self.save_device_dict()
-                return response, 200
-            return "", 204
-        # The device is sending supervision data
-        elif "data" in json_content:
-            try:
-                response = decode.extract_format_supervision_data(json_content)
-                return response, 200
-            except Exception as e:
-                logging.warning(e)
-                return "<body> Incorrect json data </body>", 403
+            # The device is asking for configuration
+            if json_content["ack"]:
+                return self.generate_configuration_response(json_content)
+            else:
+                return SUCCESS_NO_CONTENT
         # The device is acknowledging the configuration data it received
         elif "downlinkAck" in json_content:
-            id_device = json_content["device"]
-            logging.info(f"Received configuration acknowledgement from "
-                         f"device {id_device}")
-            current_device = self.device_dict[id_device]
-            current_device.last_ack_response = json_content
-            current_device.last_downlink_timestamp = json_content["time"]
-            current_device.last_downlink_status = json_content["infoCode"]
-            current_device.acknowledged = json_content["downlinkAck"]
-            self.device_dict[id_device] = current_device
-            return "", 204
+            self.handle_acknowledgement(json_content)
+            return SUCCESS_NO_CONTENT
+        # The device is sending supervision data or unsupported payload
         else:
-            return "", 204
+            return SUCCESS_NO_CONTENT
 
-    def save_device_dict(self):
-        filename = CN.DEVICE_LIST_FILENAME
-        try:
-            with open(filename, "w") as file:
-                logging.info("Serializing device dict to memory")
-                # Use custom JSON serializer
-                json.dump(self.device_dict, file, cls=BeaconDeviceJSONEncoder,
-                          sort_keys=True, indent=2)
-        except Exception as e:
-            raise e
+    def generate_configuration_response(self, json_content):
+        id_device = json_content["device"]
+        logging.info(f"Received configuration demand from "
+                     f"device {id_device}")
+        url = self.build_api_url(f"config/{id_device}/")
+        api_data = get_request(url)
+        config_data = self.format_config_data(api_data)
+        hex_data = encode.build_hex_number(config_data,
+                                           extraction.config_encoding_dict)
+        response = {
+            id_device:
+                {"downlinkData": hex_data}
+        }
+        response = json.dumps(response, sort_keys=True, indent=2)
+        return response, 200
 
-    def save_config_dict(self):
-        filename = CN.CONFIG_LIST_FILENAME
-        try:
-            with open(filename, "w") as file:
-                logging.info("Serializing config dict to memory")
-                json.dump(self.device_dict, file,
-                          sort_keys=True, indent=2)
-        except Exception as e:
-            raise e
+    def handle_acknowledgement(self, json_content):
+        id_device = json_content["device"]
+        logging.info(f"Received configuration acknowledgement from "
+                     f"device {id_device}")
+        device_data = self.format_device_data(json_content)
+        url = self.build_api_url(f"info/{id_device}")
+        post_request(url, device_data)
 
 
-root = CallbackReceiver(file_logging=True, console_logging=True)
+go_backend_address = "localhost"
+root = CallbackReceiver(file_logging=True, console_logging=True,
+                        backend_port=CN.GO_PORT,
+                        backend_address=go_backend_address)
 root.putChild(b"", root)
 factory = Site(root)
 endpoint = endpoints.TCP4ServerEndpoint(reactor, CN.HTTP_PORT)
