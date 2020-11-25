@@ -1,6 +1,7 @@
 import React from "react"
 import BeaconItem from "./BeaconItem"
 import Navbar from "./Navbar"
+import getApiUrl from "./getApiUrl";
 import "../style.css"
 
 
@@ -15,8 +16,8 @@ class MainPage extends React.Component {
     }
 
     componentDidMount() {
-        const url = "/info/"
-        fetch(url, {
+        const apiUrl = getApiUrl("info")
+        fetch(apiUrl, {
             method: 'GET',
             headers: {
                 "Content-Type": "application/json",

@@ -2,6 +2,7 @@ import React from 'react';
 import {withRouter} from 'react-router-dom';
 import NumberInput from "./NumberInput";
 import numberInputParams from "./numberInputParams";
+import getApiUrl from "./getApiUrl";
 
 class ConfigForm extends React.Component {
 
@@ -64,14 +65,12 @@ class ConfigForm extends React.Component {
         if (!this.handleValidation()) {
             return
         }
-        const successString = "Nouvelle configuration sauvegardée pour la balise " +
-            `${this.props.beacon.name} (id ${this.props.beaconId})`
-        alert(successString)
-        const url = "/config/" + this.props.beaconId
         const newConfig = this.state
         delete newConfig.apiCallReturned
         newConfig.id = this.props.beaconId
-        fetch(url, {
+        const endpoint = "/config/" + this.props.beaconId
+        const apiUrl = getApiUrl(endpoint)
+        fetch(apiUrl, {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
@@ -80,6 +79,11 @@ class ConfigForm extends React.Component {
             body: JSON.stringify(newConfig)
         })
             .then(response => response.json())
+            .then(data => {
+                const successString = "Nouvelle configuration sauvegardée pour la balise " +
+                    `${this.props.beacon.name} (id ${this.props.beaconId})`
+                alert(successString)
+            })
             .then(this.props.history.push('/'))
             .catch(err => console.log(err))
     }
@@ -100,8 +104,9 @@ class ConfigForm extends React.Component {
 
     componentDidMount() {
         // Get the previous configuration for this device
-        const url = "/config/" + this.props.beaconId
-        fetch(url, {
+        const endpoint = "/config/" + this.props.beaconId
+        const apiUrl = getApiUrl(endpoint)
+        fetch(apiUrl, {
             method: 'GET',
             headers: {
                 "Content-Type": "application/json",
