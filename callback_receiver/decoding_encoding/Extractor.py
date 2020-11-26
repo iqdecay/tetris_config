@@ -4,7 +4,7 @@ class Extractor:
     string
     """
 
-    def __init__(self, rshift, n_bits, data_origin):
+    def __init__(self, rshift, n_bits):
         # position of the first relevant bit in the string
         self.rshift = rshift
         self.size = n_bits  # lenght in bit
@@ -13,7 +13,6 @@ class Extractor:
         self.is_signed = False
         self.is_boolean = False
         self.value_modifier = None  # contains a value if is_special is True
-        self.data_origin = data_origin  # tells if data is from configuration or supervision
 
     def __repr__(self):
         return f"{self.rshift}, {self.size}"

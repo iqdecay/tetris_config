@@ -101,7 +101,6 @@ def build_hex_number(data: dict, extractors_dictionary: dict) -> int:
     underlying_int = 0
     for key, info in data.items():
         extractor = extractors_dictionary[key]
-        data_origin = extractor.data_origin
         if extractor.is_special:
             value_as_int = special_value_to_int(info, key, extractor.value_modifier)
         else:

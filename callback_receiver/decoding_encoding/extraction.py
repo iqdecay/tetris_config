@@ -33,9 +33,8 @@ value_modifiers = {
 }
 
 
-def build_extraction_dictionary(sizes: List[int], data_keys: List[str],
-                                special_keys: List[str], signed_keys: List[str],
-                                boolean_keys: List[str], value_modifier: dict):
+def build_extraction_dictionary(sizes, data_keys, special_keys, signed_keys,
+                                boolean_keys, value_modifier):
     """
     Build an extraction dictionary to help extracting information from an
     hexadecimal string and return it
@@ -51,7 +50,7 @@ def build_extraction_dictionary(sizes: List[int], data_keys: List[str],
     d = dict()
     bit_position = 0
     for key, size in zip(data_keys, sizes):
-        extractor = Extractor(bit_position, size, data_origin)
+        extractor = Extractor(bit_position, size)
         bit_position += size
         if key in special_keys:
             extractor.is_special = True
