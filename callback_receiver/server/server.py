@@ -138,8 +138,14 @@ class CallbackReceiver(Resource):
         id_device = json_content["device"]
         logging.info(f"Received configuration demand from "
                      f"device {id_device}")
-        url = self.build_api_url(f"config/{id_device}/")
-        api_data = get_request(url)
+        # Update the info on the device
+        device_data = {"time": format_timestamp(json_content["time"])}
+        # device_data["time"] = format_timestamp(json_content["time"])
+        info_url = self.build_api_url(f"info/{id_device}")
+        post_request(info_url, device_data)
+        # Get the configuration for this device
+        config_url = self.build_api_url(f"config/{id_device}/")
+        api_data = get_request(config_url)
         config_data = self.format_config_data(api_data)
         hex_data = encode.build_hex_number(config_data,
                                            extraction.config_encoding_dict)
@@ -159,10 +165,9 @@ class CallbackReceiver(Resource):
         post_request(url, device_data)
 
 
-go_backend_address = "localhost"
 root = CallbackReceiver(file_logging=True, console_logging=True,
-                        backend_port=CN.GO_PORT,
-                        backend_address=go_backend_address)
+                        backend_port=CN.BACKEND_PORT,
+                        backend_address=CN.BACKEND_URL)
 root.putChild(b"", root)
 factory = Site(root)
 endpoint = endpoints.TCP4ServerEndpoint(reactor, CN.HTTP_PORT)
