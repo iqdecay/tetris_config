@@ -93,7 +93,7 @@ func updateInfo(w http.ResponseWriter, r *http.Request) {
 		// Check if name exists and copy it so it can be displayed in the frontend
 		_, ok := infoMap[id]
 		var name string
-		if !ok {
+		if ok {
 			name = infoMap[id].Name
 		} else {
 			name = "noName"
