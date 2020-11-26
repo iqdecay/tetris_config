@@ -1,4 +1,4 @@
-version: "1"
+version: "3"
 services:
   callback_receiver:
     container_name: "callback_receiver"
@@ -8,7 +8,10 @@ services:
       - $HTTP_PORT:$HTTP_PORT
     volumes:
       - ./callback_receiver:/code
+    environment:
       - HTTP_PORT=$HTTP_PORT
+      - BACKEND_PORT=$GO_PORT
+      - BACKEND_URL=backend_server
     command: python -u -m server.server
   backend:
     container_name: "backend_server"
@@ -18,6 +21,7 @@ services:
       - $GO_PORT:$GO_PORT
     environment:
       - GO_PORT=$GO_PORT
+    command: ./goBackend
   frontend:
     container_name: "frontend_server"
     build: ./tetris_react
@@ -27,5 +31,6 @@ services:
     volumes:
       - ./tetris_react:/code
     environment:
-      - REACT_PORT=$REACT_PORT
-    command: npm start
+      - PORT=$REACT_PORT
+      - REACT_APP_BACKEND_PORT=$GO_PORT
+      - REACT_APP_BACKEND_URL=$BACKEND_NAME
