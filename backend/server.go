@@ -10,7 +10,6 @@ import (
 	"os"
 )
 import (
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -150,6 +149,27 @@ func loadMaps() {
 	}
 }
 
+
+// CORSRouterDecorator applies CORS headers to a mux.Router
+type CORSRouterDecorator struct {
+	R *mux.Router
+}
+
+// ServeHTTP wraps the HTTP server enabling CORS headers.
+func (c *CORSRouterDecorator) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if origin := r.Header.Get("Origin"); origin != "" {
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Accept-Language, Content-Type")
+	}
+	// Stop here if its Preflighted OPTIONS request
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	c.R.ServeHTTP(w, r)
+}
+
 // Using global variables is *sort* of justified here because otherwise all handlers would have to be
 // struct functions
 var configMap = map[string]beaconConfig{}
@@ -183,6 +203,7 @@ func main() {
 	r.HandleFunc("/info/", getInfos).Methods("GET")
 	// Called by callback receiver with information received from Sigfox
 	r.HandleFunc("/info/{id}/", updateInfo).Methods("POST", "PUT")
+	decoCORS := CORSRouterDecorator{r}
 	log.Printf("Started server on port %s", serverPort)
-	log.Fatal(http.ListenAndServe(serverPort, handlers.CORS()(r)))
+	log.Fatal(http.ListenAndServe(serverPort, &decoCORS))
 }
