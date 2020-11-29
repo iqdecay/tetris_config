@@ -55,8 +55,8 @@ class CallbackReceiver(Resource):
     def format_config_data(config_json: dict) -> dict:
         """
         Take a configuration dictionnary extracted from JSON and turn it into a
-        valid sigfox configuration : switch to snake case, remove the name entry
-        and set trame_reçue to 1
+        valid sigfox configuration : switch to snake case, remove the name entry,
+        perform int or float conversion, and set trame_reçue to 1
         :param config_json: the dictionary in camel case
         :return: the transformed dictionary in snake case
         """
@@ -123,7 +123,7 @@ class CallbackReceiver(Resource):
         if "ack" in json_content:
             # The device is asking for configuration
             if json_content["ack"]:
-                return self.generate_configuration_response(json_content)
+                return self.handle_configuration_request(json_content)
             else:
                 return SUCCESS_NO_CONTENT
         # The device is acknowledging the configuration data it received
@@ -134,13 +134,11 @@ class CallbackReceiver(Resource):
         else:
             return SUCCESS_NO_CONTENT
 
-    def generate_configuration_response(self, json_content):
+    def handle_configuration_request(self, json_content):
         id_device = json_content["device"]
-        logging.info(f"Received configuration demand from "
-                     f"device {id_device}")
+        logging.info(f"Received configuration demand from device {id_device}")
         # Update the info on the device
         device_data = {"time": format_timestamp(json_content["time"])}
-        # device_data["time"] = format_timestamp(json_content["time"])
         info_url = self.build_api_url(f"info/{id_device}")
         post_request(info_url, device_data)
         # Get the configuration for this device
@@ -157,6 +155,7 @@ class CallbackReceiver(Resource):
         return response, 200
 
     def handle_acknowledgement(self, json_content):
+        # Update the info on this device in the backend
         id_device = json_content["device"]
         logging.info(f"Received configuration acknowledgement from "
                      f"device {id_device}")

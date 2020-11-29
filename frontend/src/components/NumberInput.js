@@ -2,6 +2,8 @@ import React from 'react';
 import "./NumberInput.css"
 
 class NumberInput extends React.Component {
+    // An improved number input with "validation" thanks to max and min properties
+    // The already existing configuration serves as a default value
     constructor(props) {
         super();
         this.state = {

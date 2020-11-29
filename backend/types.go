@@ -11,6 +11,7 @@ type deviceInfo struct {
 	Name string `json:"name"`
 }
 
+// Represents the full acknowledgement frame for checking into details later
 type sigfoxAckResponse struct {
 	Device            string `json:"device"`
 	Time              string `json:"time"`
@@ -20,11 +21,11 @@ type sigfoxAckResponse struct {
 	DownlinkOverUsage bool   `json:"downlinkOverUsage"`
 }
 
-// This type represents the configuration of a device. It will be sent to the callback receiver as is
-// It also contains the name given to the device, even though it is not sent to Sigfox
+// Represents the configuration of a device. It will be sent to the callback receiver as is.
+// It also contains the name given to the device, but the field is deleted by the callback receiver
 type beaconConfig struct {
 	// Only fields starting with capital letter are exported
-	// The field `Name` is duplicated in deviceInfo struct : frontend uses deviceInfo for display, but beaconConfig for
+	// The field is duplicated in deviceInfo struct : frontend uses deviceInfo for display, but beaconConfig for
 	// configuration
 	Name             string  `json:"name"`
 	SeuilMinAna30v   float32 `json:"seuilMinAna30v,string"`

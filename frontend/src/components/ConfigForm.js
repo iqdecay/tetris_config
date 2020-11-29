@@ -12,6 +12,7 @@ class ConfigForm extends React.Component {
             apiCallReturned: false,
             name: this.props.beacon.name,
         }
+        // Initialize all parameters in the configuration so it can be checked for validation
         for (const item of numberInputParams) {
             this.state[item[0]] = ""
         }
@@ -33,8 +34,7 @@ class ConfigForm extends React.Component {
             alert("Le formulaire est vide !")
             return false
         }
-        // If only the name is filled, only the name is changed
-        // (because it is only cosmetic)
+        // If only the name is filled, only the name is changed (because it is only cosmetic)
         if (this.state.name) {
             if (this.state.name.length > 32 || this.state.name.length === 0) {
                 alert("Please provide a name betwenn 1 and 32 characters")
@@ -43,8 +43,7 @@ class ConfigForm extends React.Component {
                 return true
             }
         }
-        // Numerical data is "automatically" validated by HTML thanks
-        // to the min and max properties
+        // Numerical data is "automatically" validated by HTML thanks to the min and max properties
         // Otherwise all fields must be filled
         for (const item of numberInputParams) {
             if (!this.state[item[0]]) {
@@ -62,8 +61,7 @@ class ConfigForm extends React.Component {
     }
 
     handleSubmit(event) {
-        // Submit should export the form data ONLY when it
-        // constitutes a correct Sigfox configuration
+        // Submit should export the form data ONLY when it constitutes a correct Sigfox configuration
         event.preventDefault()
         if (!this.handleValidation()) {
             return
@@ -93,6 +91,7 @@ class ConfigForm extends React.Component {
     }
 
     generateFormInputs() {
+        // Render one input per numerical field in the form
         return numberInputParams.map(
             item => <NumberInput name={item[0]}
                                  key={item[0]}

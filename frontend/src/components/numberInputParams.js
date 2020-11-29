@@ -1,3 +1,6 @@
+// This is used to build the number input fields
+// Each item of the array is built this way :
+// [key, min value, max value, step value, units (unused), label]
 const numberInputParams = [
     ["seuilMinAna30v", 0, 30, .25, "V", "Seuil min tension analogique 30V"],
     ["activMinAna30v", 0, 1, 1, "", "Activation seuil min tension analogique 30V"],

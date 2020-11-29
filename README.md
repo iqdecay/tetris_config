@@ -38,10 +38,10 @@ et non de site web "réel".
     Fixer les variables à la valeur désirée :
     - HTTP_PORT : le port (un entier) sur lequel le serveur HTTP écoute les requêtes de Sigfox 
     et qui donc doit être un port libre de la machine. C'est le port qui sera rentré dans l'interface 
-    Sigfox lors de la configuration du callback
+    Sigfox lors de la configuration du callback.
     - GO_PORT : le port (un entier) sur lequel le backend communiquera avec le frontend 
-    et callback_receiver. Il n'y a généralement pas besoin de le modifier (défaut à 4000)
-    - REACT_PORT : le port sur lequel le site web de configuration sera accessible sur le navigateur
+    et callback_receiver. Il n'y a généralement pas besoin de le modifier (défaut à 4000).
+    - REACT_PORT : le port sur lequel le site web de configuration sera accessible sur le navigateur (défaut à 3000).
 
 Une fois que les variables sont fixées, faire dans le terminal :
 ```bash

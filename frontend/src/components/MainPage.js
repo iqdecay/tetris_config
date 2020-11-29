@@ -6,13 +6,13 @@ import "../style.css"
 
 
 class MainPage extends React.Component {
+    // Display the list of devices detected so far, as a list of  BeaconItem cards
     constructor() {
         super();
         this.state = {
             beacons: {},
             apiCallReturned: false
         }
-        this.handleChange = this.handleChange.bind(this)
     }
 
     componentDidMount() {
@@ -37,28 +37,10 @@ class MainPage extends React.Component {
         return Object.keys(this.state.beacons).map((key, index) => {
                 return <BeaconItem key={key} id={key}
                                    beacon={this.state.beacons[key]}
-                                   handleChange={this.handleChange}/>
+                />
             }
         )
     }
-
-    handleChange(id) {
-        this.setState((prevState) => {
-            const updatedBeacons = prevState.beacons.map(beacon => {
-                if (beacon.id === id) {
-                    return {
-                        ...beacon,
-                        acknowledged: !beacon.acknowledged
-                    }
-                }
-                return beacon
-            })
-            return {
-                beacons: updatedBeacons
-            }
-        })
-    }
-
 
     render() {
         const renderBeaconsList = this.state.apiCallReturned ?

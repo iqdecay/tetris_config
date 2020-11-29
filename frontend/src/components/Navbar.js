@@ -4,6 +4,7 @@ import {Link} from "react-router-dom";
 import "./Navbar.css"
 
 class Navbar extends React.Component {
+    // Display the name of the page and a return arrow if the page is a configuration page
     constructor(props) {
         super();
     }

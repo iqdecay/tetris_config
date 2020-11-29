@@ -20,6 +20,7 @@ const DialogActions = withStyles((theme) => ({
 }))(MuiDialogActions);
 
 export default function CustomizedDialogs(props) {
+    // Clickable dialog that shows the last info received from the callback_receiver
     const [open, setOpen] = React.useState(false);
 
     const handleClickOpen = () => {

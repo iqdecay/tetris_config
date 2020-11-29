@@ -36,14 +36,14 @@ value_modifiers = {
 def build_extraction_dictionary(sizes, data_keys, special_keys, signed_keys,
                                 boolean_keys, value_modifier):
     """
-    Build an extraction dictionary to help extracting information from an
+    Build an extraction dictionary to help extract information from an
     hexadecimal string and return it
-    :param sizes: size in bit of the different pieces of data
-    :param data_keys: name of the different pieces of data
-    :param special_keys: key of data that needs special treatment
+    :param sizes: sizes in bit of the different pieces of data
+    :param data_keys: names of the different pieces of data
+    :param special_keys: keys of data that needs special treatment
     (scaling or int to float conversion)
-    :param signed_keys: key of signed data
-    :param boolean_keys: key of boolean data
+    :param signed_keys: keys of signed data
+    :param boolean_keys: keys of boolean data
     :param value_modifier: value modifiers for special_data
     :return: the extraction dictionary
     """

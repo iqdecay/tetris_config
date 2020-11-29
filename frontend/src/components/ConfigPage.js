@@ -9,7 +9,7 @@ class ConfigPage extends React.Component {
     }
 
     render() {
-        // Get the URL parameter
+        // Get the beacon id from the url parameters
         const beaconId = this.props.match.params.beaconID
         const title = `Page de configuration pour la balise
          "${this.state.beacon.name}", id = ${beaconId}`

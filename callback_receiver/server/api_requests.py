@@ -3,7 +3,7 @@ import requests
 
 def get_request(api_url: str) -> dict:
     """
-    Send an HTTP GET request to address, and return its JSON content as dict
+    Send an HTTP GET request to an address, and return its JSON content as dict
     :param api_url: address of the API endpoint returning JSON content
     :return: dictionary corresponding to the JSON of the response
     """
@@ -12,7 +12,7 @@ def get_request(api_url: str) -> dict:
         if response.status_code == 200:
             return response.json()
         else:
-            raise Exception(f"Error with POST request to {api_url} : status "
+            raise Exception(f"Error with GET request to {api_url} : status "
                             f"code {response.status_code}")
     except Exception as e:
         print(f"Error with GET request to {api_url} : {e}")

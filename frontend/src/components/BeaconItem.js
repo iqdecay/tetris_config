@@ -1,14 +1,17 @@
 import React from "react";
-
 import {Link} from "react-router-dom";
 import SettingsIcon from '@material-ui/icons/Settings';
-
-
 import StatusIcon from "./StatusIcon";
-import "./BeaconItem.css"
 import CustomizedDialogs from "./StatusInfo";
+import "./BeaconItem.css"
 
 class BeaconItem extends React.Component {
+    /* An element representing a device, displayed as an horizontal card*/
+    /* It has 3 main components :
+    / - A text box with the name, id and last timestamp
+    / - A box with a clickable icon to display if the acknowledgement was received
+    / - A clickable icon to edit the configuration for the device
+     */
     constructor(props) {
         super();
         this.state = {
@@ -43,9 +46,8 @@ class BeaconItem extends React.Component {
                     <CustomizedDialogs beacon={this.props.beacon} id={this.props.id}/>
                 </div>
                 <div className={"column-box"}>
-                    <Link style={{textDecoration: "none"}}
-                          to={to}>
-                       <SettingsIcon style={{fontSize: "48px", fill: "grey"}}/>
+                    <Link style={{textDecoration: "none"}} to={to}>
+                        <SettingsIcon style={{fontSize: "48px", fill: "grey"}}/>
                     </Link>
                 </div>
             </div>

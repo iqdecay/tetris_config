@@ -3,6 +3,7 @@ import ErrorIcon from '@material-ui/icons/Error';
 import CheckCircleRoundedIcon from '@material-ui/icons/CheckCircleRounded';
 
 class StatusIcon extends React.Component {
+    // Display a green OK icon if the acknowledgement was received, and a red alert icon otherwise
     constructor(props) {
         super();
     }

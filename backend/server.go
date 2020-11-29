@@ -17,16 +17,16 @@ const logFilename = "goServer.log"
 const configFilename = "configMap.json"
 const infoFilename = "infoMap.json"
 
-// This handler is useful for testing purposes only, it isn't called by the frontend or callback receiver
+// This handler is useful for testing purposes only, it isn't called by the frontend or callback_receiver.
 func getConfigs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	log.Printf("Received GET request on /config/")
 	json.NewEncoder(w).Encode(configMap)
 }
 
-// This handler is called by the frontend and callback receiver to get the current configuration.
-// The frontend will use it to display defaut values, while the callback receiver will transmit the configuration
-// to Sigfox
+// This handler is called by the frontend and callback_receiver to get the current configuration.
+// The frontend will use it to display default values in the form.
+// The callback_receiver will transmit the configuration to Sigfox.
 func getConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r) // Gets params
@@ -68,15 +68,18 @@ func updateConfig(w http.ResponseWriter, r *http.Request) {
 	saveMaps()
 }
 
+// This handler is called by the frontend to display the list of devices
 func getInfos(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	log.Printf("Received GET request on /info/")
 	json.NewEncoder(w).Encode(infoMap)
 }
 
+// This handler is called by the callback_receiver whenever it receives new information about a device,
+// either via an acknowledgement request or a configuration request
+// It creates a new deviceInfo if the id doesn't exist yet
 func updateInfo(w http.ResponseWriter, r *http.Request) {
 	// Request to this endpoint are assumed to send a full valid deviceInfo
-	// It creates a new deviceInfo if the id doesn't exist yet
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
 	id := params["id"]
@@ -106,10 +109,11 @@ func updateInfo(w http.ResponseWriter, r *http.Request) {
 	saveMaps()
 }
 
-// Work on a best-effort basis : if an error occurs, still try to continue
+// Save the maps containing the information of the system
 func saveMaps() {
 	// Save the configMap
 	data, err := json.MarshalIndent(configMap, "", "	")
+    // Work on a best-effort basis : if an error occurs, still try to continue
 	if err != nil {
 		log.Fatalf("JSON marshaling failed: %s", err)
 	}
@@ -130,6 +134,7 @@ func saveMaps() {
 	log.Printf("Saved infoMap to %s", infoFilename)
 }
 
+// Load the maps containing the information of the system
 func loadMaps() {
 	// If the file doesn't exist then the map stays empty
 	_, err := os.Stat(infoFilename)
@@ -150,12 +155,12 @@ func loadMaps() {
 }
 
 
-// CORSRouterDecorator applies CORS headers to a mux.Router
+// Apply CORS headers to a mux.Router
 type CORSRouterDecorator struct {
 	R *mux.Router
 }
 
-// ServeHTTP wraps the HTTP server enabling CORS headers.
+// Wrap the HTTP server and enable CORS headers.
 func (c *CORSRouterDecorator) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if origin := r.Header.Get("Origin"); origin != "" {
 		w.Header().Set("Access-Control-Allow-Origin", origin)
@@ -195,14 +200,15 @@ func main() {
 	log.SetOutput(mw)
 	// This endpoint is for testing only and isn't used
 	r.HandleFunc("/config/", getConfigs).Methods("GET")
-	// Called by the frontend for display, and callback receiver for Sigfox transmission
+	// Called by the frontend for display, and callback_receiver for Sigfox transmission
 	r.HandleFunc("/config/{id}/", getConfig).Methods("GET")
 	// Called by the frontend to submit the configuration form
 	r.HandleFunc("/config/{id}/", updateConfig).Methods("POST", "PUT")
 	// Called by the frontend for display
 	r.HandleFunc("/info/", getInfos).Methods("GET")
-	// Called by callback receiver with information received from Sigfox
+	// Called by callback_receiver with information received from Sigfox
 	r.HandleFunc("/info/{id}/", updateInfo).Methods("POST", "PUT")
+	// Enable CORS on the server
 	decoCORS := CORSRouterDecorator{r}
 	log.Printf("Started server on port %s", serverPort)
 	log.Fatal(http.ListenAndServe(serverPort, &decoCORS))
