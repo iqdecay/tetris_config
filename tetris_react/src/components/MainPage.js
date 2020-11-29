@@ -62,12 +62,14 @@ class MainPage extends React.Component {
 
     render() {
         const renderBeaconsList = this.state.apiCallReturned ?
-            this.generateBeaconsList() : <h1> Loading ...</h1>
+            this.generateBeaconsList() : <h1>Loading ...</h1>;
+        const isEmpty = Object.keys(this.state.beacons).length ? renderBeaconsList :
+            <h1>The device list is currently empty</h1>
         return (
             <div>
                 <Navbar title="Sigfox supervision des balises"/>
                 <div className="centered-box">
-                    {renderBeaconsList}
+                    {isEmpty}
                 </div>
             </div>
         )
