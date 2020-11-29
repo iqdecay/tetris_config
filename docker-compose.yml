@@ -33,4 +33,4 @@ services:
     environment:
       - PORT=$REACT_PORT
       - REACT_APP_BACKEND_PORT=$GO_PORT
-      - REACT_APP_BACKEND_URL=$BACKEND_NAME
+      - REACT_APP_BACKEND_URL=localhost
