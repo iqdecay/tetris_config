@@ -73,7 +73,6 @@ class ConfigForm extends React.Component {
         newConfig.id = this.props.beaconId
         const endpoint = "config/" + this.props.beaconId
         const apiUrl = getApiUrl(endpoint)
-        // console.log("apiURL : ", apiUrl, "state : ", newConfig )
         fetch(apiUrl, {
             method: 'POST',
             headers: {
