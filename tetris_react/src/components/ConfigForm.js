@@ -33,7 +33,8 @@ class ConfigForm extends React.Component {
             alert("Le formulaire est vide !")
             return false
         }
-        // If only the name is filled, only the name is changed (because it is only cosmetic)
+        // If only the name is filled, only the name is changed
+        // (because it is only cosmetic)
         if (this.state.name) {
             if (this.state.name.length > 32 || this.state.name.length === 0) {
                 alert("Please provide a name betwenn 1 and 32 characters")
@@ -42,7 +43,8 @@ class ConfigForm extends React.Component {
                 return true
             }
         }
-        // Numerical data is "automatically" validated by HTML thanks to the min and max properties
+        // Numerical data is "automatically" validated by HTML thanks
+        // to the min and max properties
         // Otherwise all fields must be filled
         for (const item of numberInputParams) {
             if (!this.state[item[0]]) {
@@ -60,7 +62,8 @@ class ConfigForm extends React.Component {
     }
 
     handleSubmit(event) {
-        // Submit should export the form data ONLY when it is constitutes a correct Sigfox configuration
+        // Submit should export the form data ONLY when it
+        // constitutes a correct Sigfox configuration
         event.preventDefault()
         if (!this.handleValidation()) {
             return
@@ -68,8 +71,9 @@ class ConfigForm extends React.Component {
         const newConfig = this.state
         delete newConfig.apiCallReturned
         newConfig.id = this.props.beaconId
-        const endpoint = "/config/" + this.props.beaconId
+        const endpoint = "config/" + this.props.beaconId
         const apiUrl = getApiUrl(endpoint)
+        // console.log("apiURL : ", apiUrl, "state : ", newConfig )
         fetch(apiUrl, {
             method: 'POST',
             headers: {
@@ -80,7 +84,8 @@ class ConfigForm extends React.Component {
         })
             .then(response => response.json())
             .then(data => {
-                const successString = "Nouvelle configuration sauvegardée pour la balise " +
+                const successString =
+                    "Nouvelle configuration sauvegardée  pour la balise " +
                     `${this.props.beacon.name} (id ${this.props.beaconId})`
                 alert(successString)
             })
@@ -104,7 +109,7 @@ class ConfigForm extends React.Component {
 
     componentDidMount() {
         // Get the previous configuration for this device
-        const endpoint = "/config/" + this.props.beaconId
+        const endpoint = "config/" + this.props.beaconId
         const apiUrl = getApiUrl(endpoint)
         fetch(apiUrl, {
             method: 'GET',
