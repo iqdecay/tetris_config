@@ -24,12 +24,12 @@ services:
     command: ./goBackend
   frontend:
     container_name: "frontend_server"
-    build: ./tetris_react
+    build: ./frontend
     # $REACT_PORT is user-defined in tetris.env
     ports:
       - $REACT_PORT:$REACT_PORT
     volumes:
-      - ./tetris_react:/code
+      - ./frontend:/code
     environment:
       - PORT=$REACT_PORT
       - REACT_APP_BACKEND_PORT=$GO_PORT
