@@ -9,7 +9,7 @@ def get_request(api_url: str) -> dict:
     """
     try:
         response = requests.get(api_url)
-        if response.status_code == 200:
+        if response.status_code in (200, 204):
             return response.json()
         elif response.status_code == 404:
             return None
@@ -31,7 +31,7 @@ def post_request(api_url: str, json_content: dict) -> dict:
     """
     try:
         response = requests.post(api_url, json=json_content)
-        if response.status_code == 200:
+        if response.status_code in (200, 204):
             return response.text
         else:
             raise Exception(f"Error with POST request to {api_url} : status "
