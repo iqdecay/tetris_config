@@ -34,6 +34,11 @@ Nginx par exemple, inutilement compliqué pour l'échelle de cette application q
 et non de site web "réel".
 
 ## Configuration :
+
+- Se placer dans le dossier :
+```bash
+cd /chemin/vers/dossier/
+``` 
 - Fichier tetris.venv :
     Fixer les variables à la valeur désirée :
     - HTTP_PORT : le port (un entier) sur lequel le serveur HTTP écoute les requêtes de Sigfox 
@@ -102,3 +107,12 @@ envoyé de requête en uplink (via une demande de configuration ou un acknowledg
 
 - Pour configurer une balise ou la renommer, il faut cliquer sur l'icône de l'engrenage correspondante. La configuration
 est sauvegardée immédiatement dans le système, et sera servie à la balise à sa prochaine demande de configuration
+
+## Test de l'affichage : 
+
+```bash
+pip3 install requests
+python3 test_request.py
+```
+Cela permet de génerer 3 "fausses" balises et de vérifier que l'affichage est
+correct dans l'inferface web
