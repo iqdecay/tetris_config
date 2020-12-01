@@ -49,7 +49,7 @@ source tetris.env
 ```
 
 
-##Mise en place :
+## Mise en place :
 - Vérifier que les variables d'environnement sont bien configurées :
 ```bash
 echo $HTTP_PORT
