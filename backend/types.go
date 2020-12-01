@@ -2,7 +2,7 @@ package main
 
 // This type represents the info that Sigfox sends back about a device.
 type deviceInfo struct {
-	// Is stored in the string form "2006-01-02 15:04:05"
+	//e.g. "2006-01-02 15:04:05"
 	DownlinkTimestamp  string            `json:"downlinkTimestamp"`
 	Acknowledged       bool              `json:"acknowledged"`
 	LastAckResponse    sigfoxAckResponse `json:"lastAckResponse"`
