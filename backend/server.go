@@ -31,15 +31,14 @@ func getConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r) // Gets params
 	log.Printf("Received GET request on /config/%s", params["id"])
-	// Check if the parameter id is in the current configs
 	config, ok := configMap[params["id"]]
 	if ok {
 		json.NewEncoder(w).Encode(config)
-		return
 	} else {
-		// Return empty configuration
-		json.NewEncoder(w).Encode(&beaconConfig{})
+		// Return error because the device doesn't have a valid configuration
+		w.WriteHeader(http.StatusNotFound)
 	}
+	return
 }
 
 // This handler is called by the frontend to set a new configuration for a device

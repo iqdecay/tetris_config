@@ -11,6 +11,8 @@ def get_request(api_url: str) -> dict:
         response = requests.get(api_url)
         if response.status_code == 200:
             return response.json()
+        elif response.status_code == 404:
+            return None
         else:
             raise Exception(f"Error with GET request to {api_url} : status "
                             f"code {response.status_code}")

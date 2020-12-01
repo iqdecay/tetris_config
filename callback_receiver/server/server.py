@@ -144,15 +144,18 @@ class CallbackReceiver(Resource):
         # Get the configuration for this device
         config_url = self.build_api_url(f"config/{id_device}/")
         api_data = get_request(config_url)
-        config_data = self.format_config_data(api_data)
-        hex_data = encode.build_hex_number(config_data,
-                                           extraction.config_encoding_dict)
-        response = {
-            id_device:
-                {"downlinkData": hex_data}
-        }
-        response = json.dumps(response, sort_keys=True, indent=2)
-        return response, 200
+        if api_data is not None:
+            config_data = self.format_config_data(api_data)
+            hex_data = encode.build_hex_number(config_data,
+                                               extraction.config_encoding_dict)
+            response = {
+                id_device:
+                    {"downlinkData": hex_data}
+            }
+            response = json.dumps(response, sort_keys=True, indent=2)
+            return response, 200
+        else:
+            return SUCCESS_NO_CONTENT
 
     def handle_acknowledgement(self, json_content):
         # Update the info on this device in the backend
