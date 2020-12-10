@@ -4,7 +4,7 @@ package main
 type deviceInfo struct {
 	//e.g. "2006-01-02 15:04:05"
 	DownlinkTimestamp  string            `json:"downlinkTimestamp"`
-	Acknowledged       bool              `json:"acknowledged"`
+	Acknowledged       bool              `json:"acknowledged,string"`
 	LastAckResponse    sigfoxAckResponse `json:"lastAckResponse"`
 	LastDownlinkStatus string            `json:"lastDownlinkStatus"`
 	// Is also stored in the beaconConfig struct of the corresponding device
@@ -15,10 +15,10 @@ type deviceInfo struct {
 type sigfoxAckResponse struct {
 	Device            string `json:"device"`
 	Time              string `json:"time"`
-	DownlinkAck       bool   `json:"downlinkAck"`
+	DownlinkAck       bool   `json:"downlinkAck,string"`
 	InfoCode          string `json:"infoCode"`
 	InfoMessage       string `json:"infoMessage"`
-	DownlinkOverUsage bool   `json:"downlinkOverUsage"`
+	DownlinkOverUsage bool   `json:"downlinkOverUsage,string"`
 }
 
 // Represents the configuration of a device. It will be sent to the callback receiver as is.
