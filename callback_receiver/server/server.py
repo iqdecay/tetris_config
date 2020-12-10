@@ -111,6 +111,7 @@ class CallbackReceiver(Resource):
                 request.setResponseCode(400)
                 return "", HEADER + b"<body> Wrong json data </body>"
         elif content_type_header == URL_ENCODED:
+            logging.info(f"Received POST request with URL-encoded media type")
             data_encoded = request.args
             content_as_json = url_encoded_to_json(data_encoded)
         else:
