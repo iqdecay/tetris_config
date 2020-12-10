@@ -129,6 +129,7 @@ class CallbackReceiver(Resource):
     def generate_POST_response(self, json_content):
         if "ack" in json_content:
             # The device is asking for configuration
+            print(json_content["ack"], type(json_content["ack"]))
             if json_content["ack"]:
                 return self.handle_configuration_request(json_content)
             else:
