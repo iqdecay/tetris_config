@@ -127,20 +127,24 @@ func persistToDisk() {
 
 // Load the maps containing the information of the system
 func loadMapsFromDisk() {
-	// If the file doesn't exist then the map stays empty
-	_, err := os.Stat(INFOFILENAME)
+	// If the file doesn't exist or is empty then the map stays empty
+	fi, err := os.Stat(INFOFILENAME)
 	if !os.IsNotExist(err) {
-		info, err := ioutil.ReadFile(INFOFILENAME)
-		if err = json.Unmarshal(info, &INFOMAP); err != nil {
-			log.Fatalf("JSON unmarshaling failed on %s : %s", INFOFILENAME, err)
+		if fi.Size() != 0 {
+			info, err := ioutil.ReadFile(INFOFILENAME)
+			if err = json.Unmarshal(info, &INFOMAP); err != nil {
+				log.Fatalf("JSON unmarshaling failed on %s : %s", INFOFILENAME, err)
+			}
 		}
 	}
 	// If the file doesn't exist then the map stays empty
-	_, err = os.Stat(CONFIGFILENAME)
+	fi, err = os.Stat(CONFIGFILENAME)
 	if !os.IsNotExist(err) {
-		config, err := ioutil.ReadFile(CONFIGFILENAME)
-		if err = json.Unmarshal(config, &CONFIGMAP); err != nil {
-			log.Fatalf("JSON unmarshaling failed on %s : %s", CONFIGFILENAME, err)
+		if fi.Size() != 0 {
+			config, err := ioutil.ReadFile(CONFIGFILENAME)
+			if err = json.Unmarshal(config, &CONFIGMAP); err != nil {
+				log.Fatalf("JSON unmarshaling failed on %s : %s", CONFIGFILENAME, err)
+			}
 		}
 	}
 }

@@ -19,9 +19,13 @@ services:
     # $GO_PORT is user-defined in tetris.env
     ports:
       - $GO_PORT:$GO_PORT
+    volumes:
+        - ${PWD}/backend/configMap.json:/code/configMap.json
+        - ${PWD}/backend/infoMap.json:/code/infoMap.json
+        - ${PWD}/backend/goServer.log:/code/goServer.log
     environment:
       - GO_PORT=$GO_PORT
-    command: ./goBackend
+    command: "./goBackend"
   frontend:
     container_name: "frontend_server"
     build: ./frontend
