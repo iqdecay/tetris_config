@@ -37,7 +37,6 @@ def url_encoded_to_json(encoded_form):
         decoded_value = value[0].decode("utf-8")
         escaped_value = html.escape(decoded_value)
         json_dict[escaped_key] = escaped_value
-    print(json_dict)
     return json_dict
 
 

@@ -61,6 +61,9 @@ class CallbackReceiver(Resource):
         :return: the transformed dictionary in snake case
         """
         del config_json["name"]
+        if all(value == '0' for value in config_json.values()):
+            logging.info("No config defined for this device")
+            return None
         config_json["trameReçue"] = 1
         snake_config = dict()
         for camel_key, item in config_json.items():
@@ -150,16 +153,16 @@ class CallbackReceiver(Resource):
         api_data = get_request(config_url)
         if api_data is not None:
             config_data = self.format_config_data(api_data)
-            hex_data = encode.build_hex_number(config_data,
-                                               extraction.config_encoding_dict)
-            response = {
-                id_device:
-                    {"downlinkData": hex_data}
-            }
-            response = json.dumps(response, sort_keys=True, indent=2)
-            return response, 200
-        else:
-            return SUCCESS_NO_CONTENT
+            if config_data is not None:
+                hex_data = encode.build_hex_number(config_data,
+                                                   extraction.config_encoding_dict)
+                response = {
+                    id_device:
+                        {"downlinkData": hex_data}
+                }
+                response = json.dumps(response, sort_keys=True, indent=2)
+                return response, 200
+        return SUCCESS_NO_CONTENT
 
     def handle_acknowledgement(self, json_content):
         # Update the info on this device in the backend

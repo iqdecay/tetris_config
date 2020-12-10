@@ -1,7 +1,6 @@
 from random import choice, randint
 
 from utils import change_endianness, generate_mask
-import constants as CN
 
 
 def binary_choice():
@@ -74,16 +73,15 @@ def encode_unsigned_integer(num: int, size: int) -> int:
     return num
 
 
-def special_value_to_int(value: float, key: str, modifier: float) -> int:
+def special_value_to_int(value: float, key: str, modifier) -> int:
     """
     Return float *value* as its code integer using *modifier*, and depending on the data origin
     """
     if key == "delai_repet":
-        # Don't use the [] syntax to avoid possible key errors
-        for key, modifier_value in modifier.items():
-            if value == modifier_value:
-                return key
+        if value in modifier:
+            return modifier[value]
     elif key == "duree_cycle_feux":
+        # duree_cycle_feux maps [1,32] (user input) to [0,31] (server)
         return value - modifier
     elif key in ["seuil_min_ana30v", "seuil_max_ana30v"]:
         return int(round(value / modifier))
@@ -106,10 +104,8 @@ def build_hex_number(data: dict, extractors_dictionary: dict) -> int:
         else:
             value_as_int = info
         if extractor.is_signed:
-            value_as_num = encode_signed_integer(value_as_int, extractor.size)
-        else:
-            value_as_num = value_as_int
-        data_as_int = value_as_num << extractor.rshift
+            value_as_int = encode_signed_integer(value_as_int, extractor.size)
+        data_as_int = value_as_int << extractor.rshift
         underlying_int += data_as_int
     big_endian = hex(underlying_int)
     if len(big_endian) % 2 != 0:
