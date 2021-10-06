@@ -1,6 +1,6 @@
 # TETRIS CONFIG : Configuration Sigfox
-Développé par Victor Nepveu, victor.nepveu@imt-atlantique.net
-https://victor-nepveu.dev/
+
+This project is the configuration side of the previous project : [Tetris](https://github.com/vnepveu/sigfox_receiver)
 
 ## Pré-requis :
 
