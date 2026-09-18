@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 )
 import (
 	"github.com/gorilla/mux"
@@ -20,6 +21,8 @@ const INFOFILENAME = "infoMap.json"
 // This handler is useful for testing purposes only, it isn't called by the frontend or callback_receiver.
 func getConfigs(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Received GET request on /config/")
+	mu.RLock()
+	defer mu.RUnlock()
 	json.NewEncoder(w).Encode(CONFIGMAP)
 }
 
@@ -30,6 +33,9 @@ func getConfig(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r) // Gets params
 	id := params["id"]
 	log.Printf("Received GET request on /config/%s", id)
+	// Lock (not RLock): the not-found branch below writes to CONFIGMAP.
+	mu.Lock()
+	defer mu.Unlock()
 	config, ok := CONFIGMAP[id]
 	if ok {
 		json.NewEncoder(w).Encode(config)
@@ -51,6 +57,8 @@ func updateConfig(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Received POST request on /config/%s ", id)
 	var config beaconConfig
 	err := json.NewDecoder(r.Body).Decode(&config)
+	mu.Lock()
+	defer mu.Unlock()
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		errorString := fmt.Sprintf("Error decoding the JSON body : %s", err)
@@ -68,6 +76,8 @@ func updateConfig(w http.ResponseWriter, r *http.Request) {
 // This handler is called by the frontend to display the list of devices
 func getInfos(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Received GET request on /info/")
+	mu.RLock()
+	defer mu.RUnlock()
 	json.NewEncoder(w).Encode(INFOMAP)
 }
 
@@ -81,6 +91,8 @@ func updateInfo(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Received POST request on /info/%s ", id)
 	var info *deviceInfo
 	err := json.NewDecoder(r.Body).Decode(&info)
+	mu.Lock()
+	defer mu.Unlock()
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		errorString := fmt.Sprintf("Error decoding the JSON body : %s", err)
@@ -103,7 +115,8 @@ func updateInfo(w http.ResponseWriter, r *http.Request) {
 	persistToDisk()
 }
 
-// Save the maps containing the information of the system
+// Save the maps containing the information of the system.
+// Callers must already hold mu (Lock, not RLock) before calling this.
 func persistToDisk() {
 	data, err := json.MarshalIndent(CONFIGMAP, "", "	")
 	if err != nil {
@@ -177,6 +190,9 @@ var CONFIGMAP = map[string]beaconConfig{}
 
 // The INFOMAP is a map of pointers to allow field access
 var INFOMAP = map[string]*deviceInfo{}
+
+// Guards CONFIGMAP and INFOMAP against concurrent access from HTTP handlers.
+var mu sync.RWMutex
 
 func main() {
 	var serverPort = os.Getenv("GO_PORT")
